@@ -49,6 +49,31 @@ jobs:
           npm cache clean --force
           npm install --legacy-peer-deps
 
+      - name: Patch Bluetooth plugin for raw VOTOL binary frames
+        working-directory: upstream
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          matches = list(Path("node_modules").glob("**/BluetoothCommunicationPlugin.java"))
+          if not matches:
+              raise SystemExit("BluetoothCommunicationPlugin.java not found")
+          for p in matches:
+              s = p.read_text()
+              old_send = 'outputStream.write(data.getBytes());'
+              new_send = 'outputStream.write(data.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));'
+              old_recv = 'new String(buffer, 0, bytes, StandardCharsets.UTF_8)'
+              new_recv = 'new String(buffer, 0, bytes, StandardCharsets.ISO_8859_1)'
+              if old_send in s:
+                  s = s.replace(old_send, new_send)
+              if old_recv in s:
+                  s = s.replace(old_recv, new_recv)
+              if old_send in s or old_recv in s:
+                  p.write_text(s)
+              print(p)
+              print("  ISO-8859-1 send:", new_send in s)
+              print("  ISO-8859-1 receive:", new_recv in s)
+          PY
+
       - name: Build upstream web app
         working-directory: upstream
         run: npm run build
