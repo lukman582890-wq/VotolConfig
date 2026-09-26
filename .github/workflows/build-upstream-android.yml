@@ -1,0 +1,74 @@
+name: Build Upstream Votol Configurator APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-upstream-android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout build trigger repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Configure Git HTTPS for public Git dependencies
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+      - name: Clone upstream source unchanged
+        run: |
+          git clone --depth 1 https://github.com/HackMan37/votol-configurator.git upstream
+          cd upstream
+          echo "UPSTREAM_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Install upstream dependencies
+        working-directory: upstream
+        run: npm install --legacy-peer-deps
+
+      - name: Build upstream web app
+        working-directory: upstream
+        run: npm run build
+
+      - name: Add Android platform
+        working-directory: upstream
+        run: npx cap add android
+
+      - name: Sync Capacitor
+        working-directory: upstream
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: upstream/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Verify APK
+        working-directory: upstream
+        run: |
+          test -f android/app/build/outputs/apk/debug/app-debug.apk
+          unzip -p android/app/build/outputs/apk/debug/app-debug.apk classes.dex >/dev/null
+          sha256sum android/app/build/outputs/apk/debug/app-debug.apk
+          echo "Built upstream commit: $UPSTREAM_COMMIT"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VotolConfigurator-upstream-debug-apk
+          path: upstream/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
