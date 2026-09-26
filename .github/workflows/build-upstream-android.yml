@@ -61,6 +61,11 @@ jobs:
         working-directory: upstream
         run: npx cap sync android
 
+      - name: Add JitPack repository for upstream USB serial dependency
+        working-directory: upstream
+        run: |
+          printf '\nallprojects { repositories { maven { url "https://jitpack.io" } } }\n' >> android/build.gradle
+
       - name: Build debug APK
         working-directory: upstream/android
         run: ./gradlew assembleDebug --no-daemon
