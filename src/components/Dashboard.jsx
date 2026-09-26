@@ -92,17 +92,33 @@ export function Dashboard({ page1, page3, page4, onUpdatePage1, onUpdatePage4, i
   // Fault Breakdown
   const getFaults = (code) => {
     const faults = [];
-    if (code & 0x01) faults.push("Hall Error");
-    if (code & 0x02) faults.push("Phase Error");
-    if (code & 0x04) faults.push("Undervoltage");
-    if (code & 0x08) faults.push("Overvoltage");
-    if (code & 0x10) faults.push("Overcurrent");
-    if (code & 0x20) faults.push("Temp Sensor Error");
-    if (code & 0x40) faults.push("Throttle Error");
-    if (code & 0x80) faults.push("Internal Logic Error");
-    // Mid/High bytes
-    if (code & 0x800000) faults.push("Motor Disconnected");
-    if (code & 0x10000) faults.push("Comm Timeout");
+    // VOTOL EM fault bit assignments (documented in the EM-V3 manuals).
+    if (code & 0x001) faults.push("Brake");
+    if (code & 0x002) faults.push("Overcurrent");
+    if (code & 0x004) faults.push("Undervoltage");
+    if (code & 0x008) faults.push("Hall Error");
+    if (code & 0x010) faults.push("Overvoltage");
+    if (code & 0x020) faults.push("Controller Error");
+    if (code & 0x040) faults.push("Motor Block");
+    if (code & 0x080) faults.push("Throttle Error");
+    if (code & 0x100) faults.push("Runaway");
+    if (code & 0x200) faults.push("EEPROM Write");
+    if (code & 0x800) faults.push("Startup Failure");
+    if (code & 0x1000) faults.push("Overheat");
+    if (code & 0x2000) faults.push("Software Overcurrent");
+    if (code & 0x4000) faults.push("Throttle Failure");
+    if (code & 0x8000) faults.push("Current Sensor 1");
+    if (code & 0x10000) faults.push("Current Sensor 2");
+    if (code & 0x20000) faults.push("Brake Error");
+    if (code & 0x40000) faults.push("Hall Select Error");
+    if (code & 0x80000) faults.push("MOSFET Driver Fault");
+    if (code & 0x100000) faults.push("MOSFET Short");
+    if (code & 0x200000) faults.push("Phase Open");
+    if (code & 0x400000) faults.push("Phase Short");
+    if (code & 0x800000) faults.push("Controller Chip Error");
+    if (code & 0x1000000) faults.push("Precharge Error");
+    if (code & 0x8000000) faults.push("Motor Overheat");
+    if (code & 0x80000000) faults.push("SOC Zero Error");
     return faults;
   };
   const activeFaults = getFaults(telemetry.faultCode);
