@@ -621,7 +621,7 @@ class SerialManager {
         if (BT.requestPermissions) {
           try {
             await BT.requestPermissions({
-              permissions: ['bluetooth', 'bluetoothScan']
+              permissions: ['bluetooth', 'bluetoothScan', 'bluetoothConnect']
             });
           } catch (pe) {
             console.error("Votol BT: Permission request failed:", pe);
