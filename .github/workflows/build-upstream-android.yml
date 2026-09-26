@@ -41,6 +41,9 @@ jobs:
       - name: Install upstream dependencies
         working-directory: upstream
         run: |
+          # Keep upstream application source unchanged. Only replace the inaccessible
+          # SSH git dependency with the published package in the temporary CI clone.
+          npm pkg set dependencies.capacitor-usb-serial="capacitor-usb-serial@1.0.3"
           rm -rf ~/.npm/_cacache/tmp/*
           npm cache clean --force
           npm install --legacy-peer-deps
