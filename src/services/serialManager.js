@@ -588,10 +588,11 @@ class SerialManager {
     if (this.connectionMode === 'bluetooth') {
       const BT = BT_PLUGIN;
       if (BT && BT.sendData) {
-        // Plugin sends data.getBytes() — binary protocol needs latin-1 string encoding
-        // so each byte value is preserved exactly as a character code
-        const latinStr = buf.toString('binary'); // latin-1: code point == byte value
-        await BT.sendData({ data: latinStr });
+        // The Android plugin transports the payload through JSON/String.
+        // It is patched during the Android build to use Base64 so every
+        // VOTOL binary byte is preserved exactly across the JS <-> Java bridge.
+        const base64 = buf.toString('base64');
+        await BT.sendData({ data: base64 });
       }
     } else if (this.connectedDevice?.portKey && this.connectedDevice.portKey !== 'BT') {
       await UsbSerial.write({
@@ -755,13 +756,13 @@ class SerialManager {
 
     // Listen for incoming data via 'dataReceived' event
     // The Java plugin emits: notifyListeners("dataReceived", {data: String})
-    // String is raw bytes read from InputStream — must parse as latin-1 (binary encoding)
+    // The patched Android plugin emits Base64 so arbitrary binary bytes survive
+    // the Capacitor JSON/String bridge without UTF-8 corruption.
     if (BT.addListener) {
       BT.addListener('dataReceived', (event) => {
-        const rawStr = event.data || '';
-        if (rawStr) {
-          // 'binary' encoding maps each char code to a byte value (latin-1)
-          const newBytes = Buffer.from(rawStr, 'binary');
+        const base64 = event.data || '';
+        if (base64) {
+          const newBytes = Buffer.from(base64, 'base64');
           this.readBuffer = Buffer.concat([this.readBuffer, newBytes]);
           this._processBtBuffer();
         }
