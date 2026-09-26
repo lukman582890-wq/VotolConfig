@@ -20,7 +20,7 @@
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/share": "^8.0.1",
     "@yesprasoon/capacitor-bluetooth-communication": "^1.0.0",
-    "capacitor-usb-serial": "git+https://github.com/LeeSkies/capacitor-usb-serial.git",
+    "capacitor-usb-serial": "^1.0.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
