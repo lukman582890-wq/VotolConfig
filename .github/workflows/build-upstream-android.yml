@@ -40,7 +40,10 @@ jobs:
 
       - name: Install upstream dependencies
         working-directory: upstream
-        run: npm install --legacy-peer-deps
+        run: |
+          rm -rf ~/.npm/_cacache/tmp/*
+          npm cache clean --force
+          npm install --legacy-peer-deps
 
       - name: Build upstream web app
         working-directory: upstream
