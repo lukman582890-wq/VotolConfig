@@ -72,19 +72,37 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           p = Path("android/app/src/main/AndroidManifest.xml")
-          s = p.read_text()
-          permissions = '''\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n'''
-          if "android.permission.BLUETOOTH_SCAN" not in s:
-              marker = "<manifest "
-              start = s.find(marker)
-              if start < 0:
-                  raise SystemExit("AndroidManifest.xml: <manifest> not found")
-              end = s.find(">", start)
-              if end < 0:
-                  raise SystemExit("AndroidManifest.xml: opening <manifest> tag not found")
-              s = s[:end+1] + permissions + s[end+1:]
-              p.write_text(s)
+          text = p.read_text()
+          required = [
+              '<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />',
+              '<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />',
+          ]
+          marker = "<manifest "
+          start = text.find(marker)
+          if start < 0:
+              raise SystemExit("AndroidManifest.xml: <manifest> not found")
+          end = text.find(">", start)
+          if end < 0:
+              raise SystemExit("AndroidManifest.xml: opening <manifest> tag not found")
+          additions = "".join("\n    " + line for line in required)
+          missing = [line for line in required if line not in text]
+          if missing:
+              text = text[:end + 1] + additions + "\n" + text[end + 1:]
+              p.write_text(text)
           print(p.read_text())
+          for line in required:
+              if line not in p.read_text():
+                  raise SystemExit("Required Bluetooth permission was not written: " + line)
+          PY
+
+      - name: Verify Bluetooth permissions before Gradle build
+        working-directory: upstream
+        run: |
+          echo "=== AndroidManifest.xml Bluetooth permissions ==="
+          grep -n "BLUETOOTH_" android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.BLUETOOTH_SCAN' android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.BLUETOOTH_CONNECT' android/app/src/main/AndroidManifest.xml
+
 
       - name: Build debug APK
         working-directory: upstream/android
