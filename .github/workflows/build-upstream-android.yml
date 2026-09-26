@@ -66,6 +66,26 @@ jobs:
         run: |
           printf '\nallprojects { repositories { maven { url "https://jitpack.io" } } }\n' >> android/build.gradle
 
+      - name: Add Android 12+ Bluetooth permissions
+        working-directory: upstream
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          permissions = '''\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n'''
+          if "android.permission.BLUETOOTH_SCAN" not in s:
+              marker = "<manifest "
+              start = s.find(marker)
+              if start < 0:
+                  raise SystemExit("AndroidManifest.xml: <manifest> not found")
+              end = s.find(">", start)
+              if end < 0:
+                  raise SystemExit("AndroidManifest.xml: opening <manifest> tag not found")
+              s = s[:end+1] + permissions + s[end+1:]
+              p.write_text(s)
+          print(p.read_text())
+
       - name: Build debug APK
         working-directory: upstream/android
         run: ./gradlew assembleDebug --no-daemon
