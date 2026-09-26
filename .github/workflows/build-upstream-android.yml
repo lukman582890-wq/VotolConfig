@@ -1,4 +1,4 @@
-name: Build Upstream Votol Configurator APK
+name: Build Upstream Votol Configurator APK - Clean Source
 
 on:
   workflow_dispatch:
