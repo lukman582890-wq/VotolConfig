@@ -10,7 +10,8 @@ import { getMotorModel, getVoltageLabel } from '../services/votoCore';
 export function Dashboard({ page1, page3, page4, onUpdatePage1, onUpdatePage4, isConnected }) {
   const [telemetry, setTelemetry] = useState({
     volt: 0, current: 0, rpm: 0, ic_temp: 0, ex_temp: 0, 
-    temp_cf: 0, fu_stat: 0, ic_stat: 0, faultCode: 0
+    temp_cf: 0, fu_stat: 0, ic_stat: 0, faultCode: 0,
+    rawHex: '', voltageRaw: 0, currentRaw: 0, checksumExpected: 0
   });
 
   const [calValues, setCalValues] = useState({
@@ -199,6 +200,23 @@ export function Dashboard({ page1, page3, page4, onUpdatePage1, onUpdatePage4, i
               <div>
                   <p className="text-[10px] sm:text-sm text-text-secondary font-medium uppercase tracking-wider">Temp Coef.</p>
                   <p className="text-lg sm:text-2xl font-bold text-text-primary">{telemetry.temp_cf}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Raw VOTOL diagnostics */}
+          <div className="bg-surface border border-border-color rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-4 py-2 sm:px-6 sm:py-3 border-b border-border-color bg-surface-hover/30 flex items-center gap-2">
+              <ActivityIcon className="w-4 h-4 text-primary" />
+              <h3 className="text-xs sm:text-sm font-bold text-text-primary uppercase tracking-wider">VOTOL RAW FRAME</h3>
+            </div>
+            <div className="p-3 sm:p-4 font-mono text-[9px] sm:text-xs leading-relaxed break-all text-text-secondary">
+              <div className="text-text-primary mb-2">{telemetry.rawHex || 'Menunggu frame telemetry…'}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <span>B5-B6: 0x{telemetry.voltageRaw.toString(16).padStart(4, '0').toUpperCase()}</span>
+                <span>Voltage: {telemetry.voltageRaw ? (telemetry.voltageRaw / 10).toFixed(1) : '0.0'} V</span>
+                <span>B7-B8: 0x{(telemetry.currentRaw & 0xFFFF).toString(16).padStart(4, '0').toUpperCase()}</span>
+                <span>B22 XOR: 0x{telemetry.checksumExpected.toString(16).padStart(2, '0').toUpperCase()}</span>
               </div>
             </div>
           </div>
