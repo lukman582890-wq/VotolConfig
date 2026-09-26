@@ -10,7 +10,7 @@ import { Page4Config } from './components/Page4Config';
 import { Page5Config } from './components/Page5Config';
 import { RemoteControl } from './components/RemoteControl';
 import { serialManager } from './services/serialManager';
-import logo from './assets/icon.png';
+const logo = '/favicon.svg';
 export function SidebarItem({ icon: Icon, label, active, onClick }) {
   return (
     <button
