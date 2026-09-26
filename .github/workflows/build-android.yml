@@ -39,6 +39,17 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Configure JitPack repository
+        run: |
+          cat >> android/build.gradle <<'EOF'
+          
+          allprojects {
+              repositories {
+                  maven { url 'https://jitpack.io' }
+              }
+          }
+          EOF
+
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
