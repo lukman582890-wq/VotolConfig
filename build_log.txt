@@ -1,0 +1,30 @@
+npm verbose cli /usr/bin/node /usr/bin/npm
+npm info using npm@11.11.1
+npm info using node@v25.7.0
+npm verbose title npm run build
+npm verbose argv "run" "build" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:/home/hackman37/.npm/_logs/2026-03-15T20_03_38_558Z-
+npm verbose logfile /home/hackman37/.npm/_logs/2026-03-15T20_03_38_558Z-debug-0.log
+
+> votol-configurator@0.0.0 build
+> vite build
+
+4:03:38 p.m. [vite] warning: `esbuild` option was specified by "vite-plugin-node-polyfills" plugin. This option is deprecated, please use `oxc` instead.
+Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ banner: undefined }`
+vite v8.0.0 building client environment for production...
+[2Ktransforming...✓ 1757 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.47 kB │ gzip:  0.30 kB
+dist/assets/index-9otrOpKi.css   52.79 kB │ gzip:  8.98 kB
+dist/assets/web-Bav2xN9c.js       0.36 kB │ gzip:  0.24 kB
+dist/assets/web-BDBrWt8o.js       8.45 kB │ gzip:  2.82 kB
+dist/assets/index-CXKXAxdg.js   336.28 kB │ gzip: 98.46 kB
+
+✓ built in 448ms
+npm verbose cwd /home/hackman37/Descargas/Mega Pack VOTOL Software/Linux/votol-configurator
+npm verbose os Linux 6.19.7-1-cachyos
+npm verbose node v25.7.0
+npm verbose npm  v11.11.1
+npm verbose exit 0
+npm info ok
