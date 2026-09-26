@@ -39,6 +39,25 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Configure Android Bluetooth permissions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          perms = """    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />"""
+          if "android.permission.BLUETOOTH_SCAN" not in s:
+              s = s.replace("<manifest", "<manifest", 1)
+              pos = s.find(">") + 1
+              s = s[:pos] + "\n" + perms + s[pos:]
+              p.write_text(s)
+          PY
+
       - name: Configure JitPack repository
         run: |
           cat >> android/build.gradle <<'EOF'
