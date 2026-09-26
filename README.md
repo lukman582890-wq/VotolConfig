@@ -236,3 +236,6 @@ Use at your own risk. The developers are not responsible for damage, injury, los
 ## License
 
 A project license will be selected before the repository is published as a reusable open-source project.
+
+
+<!-- CI trigger: Android APK build pipeline enabled. -->
