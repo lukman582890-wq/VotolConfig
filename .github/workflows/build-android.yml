@@ -43,6 +43,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path("android/app/src/main/AndroidManifest.xml")
           s = p.read_text()
           perms = """    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
@@ -52,9 +53,7 @@ jobs:
               <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
               <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />"""
           if "android.permission.BLUETOOTH_SCAN" not in s:
-              s = s.replace("<manifest", "<manifest", 1)
-              pos = s.find(">") + 1
-              s = s[:pos] + "\n" + perms + s[pos:]
+              s = re.sub(r'(<manifest\\b[^>]*>)', r'\\1\\n' + perms, s, count=1)
               p.write_text(s)
           PY
 
