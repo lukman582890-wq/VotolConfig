@@ -319,8 +319,10 @@ export const parseTelemetry = (packet) => {
         // Alignment based on logs and Python reference:
         // [5-6] Voltage, [7-8] Current, [10-13] Fault Code, [14-15] RPM, 
         // [16] IC Temp, [17] Ex Temp, [18-19] Temp Coef, [20] fu_stat, [21] ic_stat
-        const volt = packet.readUInt16BE(5) / 10;
-        const current = packet.readInt16BE(7) / 10;
+        const voltageRaw = packet.readUInt16BE(5);
+        const currentRaw = packet.readInt16BE(7);
+        const volt = voltageRaw / 10;
+        const current = currentRaw / 10;
         const faultCode = packet.readUInt32BE(10) >>> 0;
         const rpm = packet.readUInt16BE(14);
         const ic_temp = packet[16] - 50;
@@ -330,7 +332,12 @@ export const parseTelemetry = (packet) => {
         const ic_stat = packet[21];
 
         return {
-            volt, current, rpm, ic_temp, ex_temp, temp_cf, fu_stat, ic_stat, faultCode
+            volt, current, rpm, ic_temp, ex_temp, temp_cf, fu_stat, ic_stat, faultCode,
+            // Raw diagnostics: lets us verify the exact 24-byte frame from the EM-50.
+            rawHex: packet.toString('hex').match(/.{1,2}/g)?.join(' ') || '',
+            voltageRaw,
+            currentRaw,
+            checksumExpected: checksum
         };
     }
     return null;
