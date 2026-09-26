@@ -303,7 +303,19 @@ export const parseTelemetry = (packet) => {
     if (packet.length < 24) return null;
 
     // Telemetry response (CMD_SHOW)
-    if (packet[0] === 0xC0 && packet[1] === 0x14 && packet[2] === 0x0D && packet[3] === 0x59) {
+    if (packet[0] === 0xC0 && packet[1] === 0x14 && packet[2] === 0x0D && packet[3] === 0x59 && packet[23] === 0x0D) {
+        // VOTOL frames carry an XOR checksum at B22 over bytes B0..B21.
+        // Reject corrupted/misaligned Bluetooth frames before decoding telemetry.
+        const checksum = buildChecksum(packet.slice(0, 22));
+        if (packet[22] !== checksum) {
+            console.warn('[VOTOL] Dropping telemetry frame with bad XOR checksum', {
+                expected: checksum,
+                received: packet[22],
+                hex: packet.toString('hex')
+            });
+            return null;
+        }
+
         // Alignment based on logs and Python reference:
         // [5-6] Voltage, [7-8] Current, [10-13] Fault Code, [14-15] RPM, 
         // [16] IC Temp, [17] Ex Temp, [18-19] Temp Coef, [20] fu_stat, [21] ic_stat
