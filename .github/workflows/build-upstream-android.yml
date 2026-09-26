@@ -57,6 +57,29 @@ jobs:
         working-directory: upstream
         run: npx cap add android
 
+      - name: Add Bluetooth permissions to upstream plugin manifest
+        working-directory: upstream
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("node_modules/@yesprasoon/capacitor-bluetooth-communication/android/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          permissions = """
+              <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+          """
+          if "android.permission.BLUETOOTH_SCAN" not in s:
+              end = s.find(">", s.find("<manifest"))
+              if end < 0:
+                  raise SystemExit("Plugin AndroidManifest.xml: opening <manifest> tag not found")
+              s = s[:end + 1] + permissions + s[end + 1:]
+              p.write_text(s)
+          PY
+
       - name: Sync Capacitor
         working-directory: upstream
         run: npx cap sync android
@@ -66,47 +89,42 @@ jobs:
         run: |
           printf '\nallprojects { repositories { maven { url "https://jitpack.io" } } }\n' >> android/build.gradle
 
-      - name: Add Android 12+ Bluetooth permissions
+      - name: Ensure Bluetooth permissions in app manifest
         working-directory: upstream
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path("android/app/src/main/AndroidManifest.xml")
-          text = p.read_text()
-          required = [
-              '<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />',
-              '<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />',
-          ]
-          marker = "<manifest "
-          start = text.find(marker)
-          if start < 0:
-              raise SystemExit("AndroidManifest.xml: <manifest> not found")
-          end = text.find(">", start)
-          if end < 0:
-              raise SystemExit("AndroidManifest.xml: opening <manifest> tag not found")
-          additions = "".join("\n    " + line for line in required)
-          missing = [line for line in required if line not in text]
-          if missing:
-              text = text[:end + 1] + additions + "\n" + text[end + 1:]
-              p.write_text(text)
-          print(p.read_text())
-          for line in required:
-              if line not in p.read_text():
-                  raise SystemExit("Required Bluetooth permission was not written: " + line)
+          s = p.read_text()
+          permissions = """
+              <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+          """
+          if "android.permission.BLUETOOTH_SCAN" not in s:
+              end = s.find(">", s.find("<manifest"))
+              if end < 0:
+                  raise SystemExit("AndroidManifest.xml: opening <manifest> tag not found")
+              s = s[:end + 1] + permissions + s[end + 1:]
+              p.write_text(s)
           PY
-
-      - name: Verify Bluetooth permissions before Gradle build
-        working-directory: upstream
-        run: |
-          echo "=== AndroidManifest.xml Bluetooth permissions ==="
-          grep -n "BLUETOOTH_" android/app/src/main/AndroidManifest.xml
-          grep -q 'android.permission.BLUETOOTH_SCAN' android/app/src/main/AndroidManifest.xml
-          grep -q 'android.permission.BLUETOOTH_CONNECT' android/app/src/main/AndroidManifest.xml
-
 
       - name: Build debug APK
         working-directory: upstream/android
         run: ./gradlew assembleDebug --no-daemon
+
+      - name: Verify merged Bluetooth permissions
+        working-directory: upstream
+        run: |
+          MERGED="android/app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml"
+          test -f "$MERGED"
+          grep -q 'android.permission.BLUETOOTH_SCAN' "$MERGED"
+          grep -q 'android.permission.BLUETOOTH_CONNECT' "$MERGED"
+          echo "Merged manifest contains Bluetooth scan/connect permissions."
+          grep 'android.permission.BLUETOOTH' "$MERGED"
 
       - name: Verify APK
         working-directory: upstream
